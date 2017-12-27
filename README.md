@@ -9,4 +9,4 @@
 
 作業四：TF-IDF & K-means 
 
-作業五：以t test進行分析
+作業五：以t test進行分析https://ntu-csx-datascience.github.io/B04404013-/HW5.html
