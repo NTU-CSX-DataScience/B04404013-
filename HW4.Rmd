@@ -1,0 +1,55 @@
+
+------------------------------------------------------
+分析於Acinetobater baumannii在Pubmed上的論文標題變化
+:用以了解關於Ab菌的研究趨勢變化
+=======================================================
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 匯入工具
+
+```{r}
+
+library(RISmed)
+library("NLP")
+library("tm")
+Sys.setenv(JAVA_HOME="C:\\Users\\jim87\\Documents\\R\\java")
+library("rJava")
+library("SnowballC")
+library("slam")
+library("Matrix")
+library("dplyr")
+```
+
+## 以RISmed這個package從Pubmed上分別抓取2000~2017各年度的所有論文標題，並彙整到一個doc的資料夾中
+
+
+## 匯入並轉換抓取到的資料
+
+```{r}
+d.corpus <- Corpus(DirSource("doc"), list(language = NA))
+d.corpus <- tm_map(d.corpus, removePunctuation)
+```
+## TF-IDF演算法
+
+```{r}
+control_list <- list(removePunctuation = TRUE, stopwords = TRUE, tolower = TRUE)
+tdm <- TermDocumentMatrix(d.corpus,control = control_list)
+tf <- apply(tdm, 2, sum) # term frequency
+idf <- function(word_doc){ log2( (length(word_doc)+1) / nnzero(word_doc) ) }
+idf <- apply(tdm, 1, idf)
+options(scipen = 999)
+doc.tfidf <- as.matrix(tdm)
+for(i in 1:nrow(tdm)){
+  for(j in 1:ncol(tdm)){
+    doc.tfidf[i,j] <- (doc.tfidf[i,j] / tf[j]) * idf[i]
+  }
+}
+colnames(doc.tfidf) <- c(2000:2017)
+doc.tfidf = doc.tfidf*1000#TF-IDF太小，放大以方便計算
+dataframe.tfidf = as.data.frame(doc.tfidf)
+```
+
+
