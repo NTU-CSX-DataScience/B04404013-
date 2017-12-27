@@ -1,0 +1,67 @@
+---
+
+探討各種天氣狀況對於旅遊捷運族的影響
+==========================
+醫技三 吳嘉峻
+--------------------------
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## A.匯入資料
+1.包含105年個個周末的當日捷運運輸指數:之所以選擇周末的原因是因為平日都是上班族，無法分析旅客對於天氣的反應
+
+2.定義捷運運輸指數:(當日累積運輸量/當月每日平均運輸量)*10
+
+3.雨量資料:台北監測站當日24小時累積雨量(>2.5mm為有感雨量)
+
+4.太陽輻射資料:台北監測站當日UV指數(>6為危險等級)
+
+5.空氣品質:以PM2.5為指數，並以中山監測點的資料代表台北市整體資料(>54建議戴口罩的空氣品質)
+
+6.資料來源:中央氣象局、台北捷運網站
+```{r}
+datatoanalysis = read.csv("2015weekendverusweath.csv")
+```
+
+## B.以t test分析「下雨」是否影響捷運搭乘人數
+
+```{r}
+Raining=ifelse(datatoanalysis[,3]>=2.5,"rain","NOrain")#日累積雨量>=2.5mm定義為rain；<2.5則定義為沒下雨(Norain)
+a = t.test(datatoanalysis[,6] ~ Raining, paired=FALSE, var.equal=TRUE, alt="two.sided")
+print(a)
+```
+p-value>0.05，表示統計上沒有足夠的信心水準拒絕兩者間沒有相關性，但其實p-value已經很接近0.05且可以從mean in group NOrain/rain看到其實兩者有差異，可以看的出來「沒有下雨的時候」的捷運搭乘指數還是稍稍大於「有下雨的時候」的捷運搭乘指數
+
+## Bb.進一步以t test分析是否下"大"雨與捷運搭乘人數的相關性
+```{r}
+Heavyraining=ifelse(datatoanalysis[,3]>=30,"heavyrain","normal")#日累積雨量>=30mm定義為大雨(heavyrain)；<30則定義為正常(normal)
+b=t.test(datatoanalysis[,6] ~ Heavyraining, paired=FALSE, var.equal=TRUE, alt="two.sided")
+print(b)
+```
+從mean in group heavyrain/normal看到兩者差異比起以2.5mm作為分界的差異更大，可以看的出來「下大雨的時候」的捷運搭乘指數大於「正常情況」的捷運搭乘指數，這裡可以注意到雖然平均差異上升，但p-value卻變得更大，回顧資料可以推測可能原因為>30mm的累積降雨量的天數太少，導致p-value的上升
+
+## C.以t test分析「室外紫外線強弱」是否影響捷運搭乘人數
+
+```{r}
+UV=ifelse(datatoanalysis[,4]>=8,"dangerous","indangerous")#室外紫外線指數>=8定義為危險程度(dangerous)；<8則定義為不危險(indangerous)
+c=t.test(datatoanalysis[,6] ~ UV, paired=FALSE, var.equal=TRUE, alt="two.sided")
+print(c)
+```
+可以看到在mean in group dangerous/indangerous的差異很小且p-value極大，推測室外紫外線指數強弱並不太會影響捷運搭乘人數，推測原因為一般民眾視出太陽為好天氣，所以較不會因為太陽太大而不出門遊玩
+
+## D.以t test分析「室外空氣品質」是否影響捷運搭乘人數
+
+```{r}
+PM2.5=ifelse(datatoanalysis[,5]>=54,"unclear","clear")#PM2.5>=54定義為空氣不乾淨(unclear)；<54則定義為乾淨(clear)
+d=t.test(datatoanalysis[,6] ~ PM2.5, paired=FALSE, var.equal=TRUE, alt="two.sided")
+print(d)
+```
+從p-value極小可以得知「室外空氣品質」會影響捷運搭乘人數，再從mean in group clear /unclear可以得知外面空氣不乾淨會大大影響搭乘捷運的人，甚至說是出門遊玩的人，推測原因為:現代人越來越重視空氣汙染的議題，外加新聞及氣象預報大力的報導，讓民眾對於PM2.5處於危險值的時候盡量少出門
+
+##E.結論
+「下雨」與「空氣品質」確實會影響在假日的捷運搭乘狀況，其中又以空氣品質(或者說是PM2.5)的影響尤甚，顯現了現代人對於空氣品質的重視。
+
+
+
